@@ -14,15 +14,26 @@ def press(key):
 	ui.write(e.EV_KEY, key, 0)
 	ui.syn();
 
-from evdev_testing import *
+
+users = {}
+
 channel_str = 'CEGA7CWC8'
 slack_token = "xoxb-31574398614-493282812389-Dc0KqCOnM63zrbsixcNKLcjU"
 sc = SlackClient(slack_token)
 direction = 0
+counter = 0
+interval = 30
+messages = 2
 if sc.rtm_connect():
 	while sc.server.connected is True:
 		for event in sc.rtm_read():
 			if 'text' in event.keys() and 'channel' in event.keys() and event['channel'] == channel_str:
+				user = event['user']
+				if user not in users.keys():
+					users[user] = 0
+				else:
+					if users[user] > messages:
+						continue
 				text = event['text']
 				if text == 'up':
 					press(e.KEY_UP)
@@ -52,3 +63,7 @@ if sc.rtm_connect():
 					press(e.KEY_E)
 				elif text == 'start':
 					press(e.KEY_Q)
+		counter+=1
+		if counter % interval:
+			for key in users.keys():
+				users[key] = 0
